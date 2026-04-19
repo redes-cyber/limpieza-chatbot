@@ -17,7 +17,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer);
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // Almacenar logs en memoria para el dashboard (últimos 100)
 const messageLogs = [];
@@ -48,8 +48,12 @@ app.get('/api/admin/logs', (req, res) => {
 });
 
 // Servir la interfaz del admin (React/HTML puro)
+app.get('/', (req, res) => {
+    res.redirect('/admin');
+});
+
 app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
 
