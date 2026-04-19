@@ -84,6 +84,9 @@ app.get('/webhook', (req, res) => {
 app.post('/webhook', async (req, res) => {
     const body = req.body;
     
+    // LOG DE DIAGNÓSTICO: Registrar CUALQUIER toque al Webhook
+    addLog('system', 'Webhook', 'Petición recibida en Webhook: ' + (body.object || 'desconocido'));
+
     // Quitamos la comprobación de body.object para permitir test manual, pero mantenemos la estructura segura
     if (body.entry && body.entry[0].changes && body.entry[0].changes[0] && body.entry[0].changes[0].value.messages && body.entry[0].changes[0].value.messages[0]) {
         const message = body.entry[0].changes[0].value.messages[0];
