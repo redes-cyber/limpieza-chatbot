@@ -83,10 +83,10 @@ app.get('/webhook', (req, res) => {
 // Recepción de mensajes
 app.post('/webhook', async (req, res) => {
     const body = req.body;
-    if (body.object) {
-        if (body.entry && body.entry[0].changes && body.entry[0].changes[0] && body.entry[0].changes[0].value.messages && body.entry[0].changes[0].value.messages[0]) {
-            const message = body.entry[0].changes[0].value.messages[0];
-            const senderPhone = message.from;
+    // Quitamos la comprobación estricta de (body.object) para permitir tests manuales fáciles
+    if (body.entry && body.entry[0].changes && body.entry[0].changes[0] && body.entry[0].changes[0].value.messages && body.entry[0].changes[0].value.messages[0]) {
+        const message = body.entry[0].changes[0].value.messages[0];
+        const senderPhone = message.from;
 
             if (message.type === "text") {
                 const messageText = message.text.body;
@@ -119,8 +119,11 @@ app.post('/webhook', async (req, res) => {
             } else {
                addLog('system', senderPhone, `(Mensaje recibido no de texto: ${message.type})`);
             }
+            res.sendStatus(200);
+        } else {
+            // Recibido objeto de facebook extraño (status, delivery, etc)
+            res.sendStatus(200);
         }
-        res.sendStatus(200);
     } else {
         res.sendStatus(404);
     }
