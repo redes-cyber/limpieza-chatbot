@@ -4,12 +4,12 @@ import path from 'path';
 const CONFIG_FILE = path.join(process.cwd(), 'config.json');
 
 const DEFAULT_CONFIG = {
-  systemPrompt: "Eres el asistente inteligente de Limpieza Balear. Tu tono es profesional, amable y eficiente. Ayudas a los clientes de Mallorca a pedir presupuestos de limpieza y resolver dudas sobre servicios de fin de obra y oficinas.",
-  META_ACCESS_TOKEN: "",
-  PHONE_NUMBER_ID: "",
-  VERIFY_TOKEN: "mi_token_secreto",
-  GEMINI_API_KEY: "",
-  ADMIN_PASSWORD: "admin"
+  systemPrompt: process.env.SYSTEM_PROMPT || "Eres el asistente inteligente de Limpieza Balear. Tu tono es profesional, amable y eficiente. Ayudas a los clientes de Mallorca a pedir presupuestos de limpieza y resolver dudas sobre servicios de fin de obra y oficinas.",
+  META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN || "",
+  PHONE_NUMBER_ID: process.env.PHONE_NUMBER_ID || "",
+  VERIFY_TOKEN: process.env.VERIFY_TOKEN || "mi_token_secreto",
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "admin"
 };
 
 let inMemoryConfig = null;
