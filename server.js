@@ -83,47 +83,46 @@ app.get('/webhook', (req, res) => {
 // Recepción de mensajes
 app.post('/webhook', async (req, res) => {
     const body = req.body;
-    // Quitamos la comprobación estricta de (body.object) para permitir tests manuales fáciles
+    
+    // Quitamos la comprobación de body.object para permitir test manual, pero mantenemos la estructura segura
     if (body.entry && body.entry[0].changes && body.entry[0].changes[0] && body.entry[0].changes[0].value.messages && body.entry[0].changes[0].value.messages[0]) {
         const message = body.entry[0].changes[0].value.messages[0];
         const senderPhone = message.from;
 
-            if (message.type === "text") {
-                const messageText = message.text.body;
+        if (message.type === "text") {
+            const messageText = message.text.body;
 
-                // 1. Registrar mensaje entrante
-                addLog('incoming', senderPhone, messageText);
+            // 1. Registrar mensaje entrante
+            addLog('incoming', senderPhone, messageText);
 
-                // 2. Procesar con Gemini y responder (No bloqueamos la respuesta HTTP a Meta)
-                (async () => {
-                   try {
-                       const history = getHistory(senderPhone);
-                       
-                       // Consultar IA
-                       const responseText = await generateResponse(history, messageText);
-   
-                       // Guardar en memoria (usuario y modelo)
-                       addMessage(senderPhone, "user", messageText);
-                       addMessage(senderPhone, "model", responseText);
-   
-                       // Enviar respuesta por WhatsApp
-                       await sendWhatsAppMessage(senderPhone, responseText);
-   
-                       // Registrar respuesta saliente
-                       addLog('outgoing', senderPhone, responseText);
-                   } catch (error) {
-                       console.error("Error al procesar el mensaje:", error);
-                       addLog('error', senderPhone, `Error: ${error.message}`);
-                   }
-                })();
-            } else {
-               addLog('system', senderPhone, `(Mensaje recibido no de texto: ${message.type})`);
+            // 2. Procesar con Gemini y responder 
+            // Esperamos explícitamente porque Vercel cancela el proceso si devolvemos el res.send antes
+            try {
+                const history = getHistory(senderPhone);
+                
+                // Consultar IA
+                const responseText = await generateResponse(history, messageText);
+
+                // Guardar en memoria
+                addMessage(senderPhone, "user", messageText);
+                addMessage(senderPhone, "model", responseText);
+
+                // Enviar respuesta por WhatsApp
+                await sendWhatsAppMessage(senderPhone, responseText);
+
+                // Registrar respuesta saliente
+                addLog('outgoing', senderPhone, responseText);
+            } catch (error) {
+                console.error("Error al procesar el mensaje:", error);
+                addLog('error', senderPhone, `Error: ${error.message}`);
             }
-            res.sendStatus(200);
         } else {
-            // Recibido objeto de facebook extraño (status, delivery, etc)
-            res.sendStatus(200);
+            addLog('system', senderPhone, `(Mensaje recibido no de texto: ${message.type})`);
         }
+        res.sendStatus(200);
+    } else if (body.object || body.entry) {
+        // Objetos extraños como confirmaciones de lectura
+        res.sendStatus(200);
     } else {
         res.sendStatus(404);
     }
