@@ -3,19 +3,31 @@ import path from 'path';
 
 const CHATS_FILE = path.join(process.cwd(), 'chats.json');
 
+let inMemoryChats = null;
+
 export function loadChats() {
-  if (!fs.existsSync(CHATS_FILE)) {
-    return {};
-  }
+  if (inMemoryChats) return inMemoryChats;
+  
   try {
-    return JSON.parse(fs.readFileSync(CHATS_FILE, 'utf8'));
+    if (fs.existsSync(CHATS_FILE)) {
+      inMemoryChats = JSON.parse(fs.readFileSync(CHATS_FILE, 'utf8'));
+      return inMemoryChats;
+    }
   } catch (err) {
-    return {};
+    // 
   }
+  
+  inMemoryChats = {};
+  return inMemoryChats;
 }
 
 export function saveChats(chats) {
-  fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2));
+  inMemoryChats = chats;
+  try {
+    fs.writeFileSync(CHATS_FILE, JSON.stringify(chats, null, 2));
+  } catch(e) {
+    // Ignorar error de escritura en Vercel (read-only)
+  }
 }
 
 export function getHistory(phoneNumber) {

@@ -12,22 +12,40 @@ const DEFAULT_CONFIG = {
   ADMIN_PASSWORD: "admin"
 };
 
+let inMemoryConfig = null;
+
 export function loadConfig() {
-  if (!fs.existsSync(CONFIG_FILE)) {
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(DEFAULT_CONFIG, null, 2));
-    return DEFAULT_CONFIG;
-  }
+  if (inMemoryConfig) return inMemoryConfig;
+  
   try {
-    const data = fs.readFileSync(CONFIG_FILE, 'utf8');
-    return { ...DEFAULT_CONFIG, ...JSON.parse(data) };
+    if (fs.existsSync(CONFIG_FILE)) {
+      const data = fs.readFileSync(CONFIG_FILE, 'utf8');
+      inMemoryConfig = { ...DEFAULT_CONFIG, ...JSON.parse(data) };
+      return inMemoryConfig;
+    }
   } catch (err) {
-    return DEFAULT_CONFIG;
+      // Ignorar lectura
   }
+  
+  inMemoryConfig = { ...DEFAULT_CONFIG };
+  try {
+     fs.writeFileSync(CONFIG_FILE, JSON.stringify(inMemoryConfig, null, 2));
+  } catch (e) {
+     // Ignorar error de escritura en Vercel (read-only)
+  }
+  return inMemoryConfig;
 }
 
 export function saveConfig(newConfig) {
   const current = loadConfig();
   const updated = { ...current, ...newConfig };
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(updated, null, 2));
+  inMemoryConfig = updated;
+  
+  try {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(updated, null, 2));
+  } catch (e) {
+    // Ignorar error de escritura en Vercel (read-only)
+  }
+  
   return updated;
 }
